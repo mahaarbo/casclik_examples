@@ -231,11 +231,23 @@ class DefaultRobotInterface(object):
                         self.stop_reason = monit_func.name()
 
     def start(self):
+        """Indicates to the callback function to start responding to
+        joint messages."""
         with self.lock:
             self.running = True
 
     def stop(self, reason=""):
+        """Indicates to the callback function to stop responding to
+        joint messages."""
         with self.lock:
             self.running = False
             self.is_first = True
             self.stop_reason = reason
+
+    def disconnect(self):
+        """Disconnect from the suscribed and published topics. The robot
+        interface must be reinitialized to start again."""
+        self.stop("disconnect")
+        with self.lock:
+            self.sub.unregister()
+            self.pub.unregister()
