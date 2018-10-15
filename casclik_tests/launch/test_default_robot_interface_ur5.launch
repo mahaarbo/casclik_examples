@@ -33,9 +33,6 @@
   </group>
 
 
-  <!-- spawn our ball visualizer -->
-  <node name="vizhandler" pkg="py_viz_marker" type="vizhandler.py" output="screen" args="-rate 50"/>
-
   <!-- Spawn our control node -->
   <node name="ur5_line_grasp_example" pkg="casclik_tests" type="ur5_line_grasp_example.py" output="screen"/>
 </launch>
