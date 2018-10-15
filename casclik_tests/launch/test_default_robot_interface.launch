@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <!-- Arguments of the launch -->
+  <arg name="sim" default="true"/>
+  <!-- load robotlab urdf -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find robotlab_support)/urdf/robotlab.xacro'" />
+
+    <!-- Run robot_state_publisher
+       The robot_state_publisher node is a node that takes the /joint_states and makes sure
+       to publish the frames of the joints to tf. Without it, RVIZ and many other things
+       may encounter problems. -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
+
+  <!-- Load RVIZ -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find robotlab_support)/rviz/robotlab.rviz" />
+  
+  <!-- Robot interface streaming starts -->
+  <group if="$(arg sim)">
+    <include file="$(find robotlab_support)/launch/robot_interface_streaming_robotlab.launch">
+      <arg name="sim_gantry" value="true"/>
+    </include>
+  </group>
+  <group unless="$(arg sim)">
+    <include file="$(find robotlab_support)/launch/robot_interface_streaming_robotlab.launch">
+      <arg name="rsi_gantry" value="true"/>
+    </include>
+  </group>
+
+  <!-- spawn our ball visualizer -->
+  <node name="vizhandler" pkg="py_viz_marker" type="vizhandler.py" output="screen" args="-namespace gantry -rate 80"/>
+
+  <!-- Spawn our control node -->
+  <!--<node name="test_default_robot_interface" pkg="casclik_tests" type="test_default_robot_interface.py" output="screen"
+      args="-namespace floor -root_link root -tip_link floor_tool0 -rate 80 -traj_center -1.0 -0.278363 1.2084 -traj_radius 0.3 -traj_omega 0.2 -robot_description /robot_description -ball_center -1.0 -0.678363 1.1084 -ball_radius 0.2 -ball_center -0.9 -0.448364 1.1084 -ball_radius 0.2"/> -->
+  <node name="test_default_robot_interface" pkg="casclik_tests" type="test_default_robot_interface.py" output="screen"
+	args="-namespace gantry -root_link root -tip_link gantry_tool0 -rate 80 -traj_center 0.0 0.0 2.0 -traj_radius 0.5 -traj_omega 0.2 -robot_description /robot_description -ball_center -0.7 0.0 2.0 -ball_radius 0.3 -ball_center -0.4 -0.4 2.0 -ball_radius 0.3 -ball_center 0.0 -0.6 2.0 -ball_radius 0.2 "/> <!---ball_center 0.45 0.0 2.0 -ball_radius 0.25"/>-->
+</launch>
