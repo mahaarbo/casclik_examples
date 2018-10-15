@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import rospy
 
-# Services
-from py_viz_marker.srv import AddMarkerRequest, AddMarker
-
 # Messages for waiting for joint_state
 from sensor_msgs.msg import JointState
 
