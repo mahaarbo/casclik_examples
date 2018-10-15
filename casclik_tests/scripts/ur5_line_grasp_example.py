@@ -18,15 +18,10 @@ if __name__ == "__main__":
     # Forward kinematics and core symbols
     ####################################################################
     # Get the forward kinematics
-    #fk_dict = xmlconv.from_parameter_server(
-    #    root="world",
-    #    tip="tool0",
-    #    key="/robot_description")
-    fk_dict = xmlconv.from_file(
-        "world",
-        "tool0",
-        "/home/mathia/Programming/python/casclik/examples/notebooks/urdf/ur5.urdf"
-    )
+    fk_dict = xmlconv.from_parameter_server(
+        root="world",
+        tip="tool0",
+        key="/robot_description")
     rospy.loginfo("--Got size(q):" + str(len(fk_dict["joint_names"])))
 
     # Setup time and robot_var
