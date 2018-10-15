@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>casclik_examples</name>
+  <version>0.1.0</version>
+  <description>Collection of ros examples for the CASCLIK python package. Uses the Thrivaldi robotlab and UR robots.</description>
+  <maintainer email="mathias.arbo@ntnu.no">Mathias Hauan Arbo</maintainer>
+  <author email="mathias.arbo@ntnu.no">Mathias Hauan Arbo</author>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>kuka_kr16_support</exec_depend>
+  <exec_depend>kuka_kr16_gazebo</exec_depend>
+  <exec_depend>kuka_resources</exec_depend>
+  <exec_depend>kuka_rsi_hw_interface</exec_depend>
+  <exec_depend>kuka_rsi_simulator</exec_depend>
+  <export>
+    <metapackage/>
+  </export>
+</package>
