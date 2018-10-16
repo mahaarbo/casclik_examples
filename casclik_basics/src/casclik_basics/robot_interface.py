@@ -228,6 +228,22 @@ class DefaultRobotInterface(object):
                                              virtual_var=self.current_virtual_var)
                     robot_vel_var = res[0].toarray()[:, 0]
                     self.current_virtual_vel_var = res[1].toarray()[:, 0]
+                #rospy.loginfo(robot_vel_var)
+                # Some solvers fail silently. Ensure that we don't send failed
+                # commands:
+                if np.isnan(robot_vel_var).any():
+                    self.running = False
+                    self.is_first = True
+                    self.stop_reason = "solver_failure_nan"
+                    return
+                # Saturate the robot velocities if necesasry:
+                for rob_idx, max_rate in enumerate(self.max_robot_vel_var):
+                    robot_vel_var[rob_idx] = min(robot_vel_var[rob_idx],
+                                                 max_rate)
+                for rob_idx, min_rate in enumerate(self.min_robot_vel_var):
+                    robot_vel_var[rob_idx] = max(robot_vel_var[rob_idx],
+                                                 min_rate)
+                # Iterate
                 self.current_robot_var += robot_vel_var*self.timestep
                 # Initialize command
                 command = Float64MultiArray()
