@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <!-- This is the second example from the article 'Set-Based Tasks within the Singularity-Robust Multiple Task-Priority Inverse Kinematics Framework: General Formulation, Stability Analysis, and Experimental Results' in Frontiers in Robotics and AI by Signe Moe (2016), doi: 10.3389/frobt.2016.00016 --> 
+
+  <!-- Arguments of the launch -->
+  <arg name="sim" default="true"/>
+
+  <!-- Upload the robot description-->
+  <include file="$(find ur_description)/launch/ur5_upload.launch">
+    <arg name="limited" value="false"/>
+  </include>
+
+  <!-- Startup controllers and things -->
+  <group if="$(arg sim)">
+    <!-- Prepare simulated world-->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="world_name" default="worlds/empty.world"/>
+      <arg name="paused" value="true"/>
+      <arg name="gui" value="false"/>
+    </include>
+    <!-- push robot_description to factory and spawn robot in gazebo -->
+    <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description
+									      -model robot -z 0.1
+									      -J shoulder_pan_joint -1.5
+									      -J shoulder_lift_joint -1.6447247447521742
+									      -J elbow_joint 1.4830607057020933
+									      -J wrist_1_joint -0.9733457906220311
+									      -J wrist_2_joint -0.6578997165707934
+									      -J wrist_3_joint 0.0 -unpause" respawn="false" output="screen" />
+    <!-- startup joint state and robot state publishers -->
+    <include file="$(find ur_gazebo)/launch/controller_utils.launch" />
+
+    <!-- Startup position controllers -->
+    <rosparam file="$(find casclik_tests)/controllers/ur5_controllers.yaml" command="load" />
+    <node name="arm_controller_spawner" pkg="controller_manager" type="controller_manager" args="spawn joint_position_controller" respawn="false" output="screen"/>
+    <!-- Load RVIZ -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find casclik_tests)/rviz/ur5.rviz" />
+  </group>
+
+  <group unless="$(arg sim)">
+    <!-- Include your desired HW launch here -->    
+  </group>
+
+
+  <!-- spawn our ball visualizer -->
+  <node name="vizhandler" pkg="py_viz_marker" type="vizhandler.py" output="screen" args="-rate 50"/>
+
+  <!-- Spawn our control node -->
+  <node name="moe2016_example1" pkg="casclik_tests" type="moe2016_example1.py" output="screen"/>
+</launch>
