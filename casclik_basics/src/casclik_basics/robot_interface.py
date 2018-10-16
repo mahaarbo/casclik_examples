@@ -95,7 +95,10 @@ class DefaultRobotInterface(object):
         skill_spec (cc.SkillSpecification): Skill specification
         timestep (float): control interval of speeds.
         casclik_joint_names (list): List of joint names as used in casclik.
-        cntrllr_class (): CASCLIK controller, defaults to ReactiveQPController
+        cntrllr_class (): CASCLIK controller, defaults to ReactiveQPController.
+        monitors (list): casclik functions of time and robotvar to stop us.
+        max_robot_vel_var (list, cs.np.array): Enforced through saturation.
+        min_robot_vel_var (list, cs.np.array): Enforced through saturation.
         namespace (str): namespace of the robot. Defaults to None.
         virtual_var0 (cs.np.array): Initial virtual var. Defaults to None.
         options (dict): options passed to the controller.
@@ -106,6 +109,8 @@ class DefaultRobotInterface(object):
                  cntrllr_class=None,
                  namespace="",
                  monitors=[],
+                 max_robot_vel_var=[],
+                 min_robot_vel_var=[],
                  cost_expr=None,
                  virtual_var0=None,
                  options=None):
@@ -157,7 +162,10 @@ class DefaultRobotInterface(object):
             options = {"open_loop": False}
         self.options = options
         self.monitors = monitors
+        self.max_robot_vel_var = max_robot_vel_var
+        self.min_robot_vel_var = min_robot_vel_var
         self.stop_reason = "initialized"
+        self.lock = Lock()  # Callback may require semaphores.
         # Setup connections and callback
         self.sub = rospy.Subscriber(ns+"/joint_states",
                                     JointState,
@@ -165,7 +173,6 @@ class DefaultRobotInterface(object):
         self.pub = rospy.Publisher(ns+"/joint_position_controller/command",
                                    Float64MultiArray,
                                    queue_size=2)
-        self.lock = Lock()  # Callback may require semaphores.
 
     def callback_control(self, msg):
         with self.lock:
