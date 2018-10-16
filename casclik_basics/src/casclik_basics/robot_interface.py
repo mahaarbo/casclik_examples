@@ -174,6 +174,20 @@ class DefaultRobotInterface(object):
                                    Float64MultiArray,
                                    queue_size=2)
 
+    @property
+    def options(self):
+        """Get or set the options. Passed to the controller class.
+        """
+        return self._options
+
+    @options.setter
+    def options(self, opt):
+        if opt is None:
+            opt = {}
+        if "open_loop" not in opt:
+            opt["open_loop"] = False
+        self._options = opt
+
     def callback_control(self, msg):
         with self.lock:
             if self.running:
