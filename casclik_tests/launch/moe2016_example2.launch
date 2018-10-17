@@ -41,7 +41,7 @@
   </group>
 
 
-  <!-- spawn our ball visualizer -->
+  <!-- spawn our visualizer services -->
   <node name="vizhandler" pkg="py_viz_marker" type="vizhandler.py" output="screen" args="-rate 50"/>
 
   <!-- Spawn our control node -->
