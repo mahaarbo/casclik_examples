@@ -54,10 +54,18 @@ def switch_hw_controller(desired_controller, resources, ns="", timeout=None):
             if cntrllr.name == desired_controller:
                 return SwitchControllerResponse(ok=True)
             for resource in resources:
-                for claimed_obj in cntrllr.claimed_resources:
-                    if resource in claimed_obj.resources:
-                        if cntrllr.name not in stop_cntrllrs:
-                            stop_cntrllrs.append(cntrllr.name)
+                try:
+                    # Kinetic Kame and above
+                    for claimed_obj in cntrllr.claimed_resources:
+                        if resource in claimed_obj.resources:
+                            if cntrllr.name not in stop_cntrllrs:
+                                stop_cntrllrs.append(cntrllr.name)
+                except AttributeError:
+                    # Older versions of ROS
+                    if resource in cntrllr.resources:
+                        if cntrllr.name != desired_controller:
+                            if cntrllr.name not in stop_cntrllrs:
+                                stop_cntrllrs.append(cntrllr.name)
     return sw([str(desired_controller)], stop_cntrllrs,
               SwitchControllerRequest.STRICT)
 
@@ -228,7 +236,6 @@ class DefaultRobotInterface(object):
                                              virtual_var=self.current_virtual_var)
                     robot_vel_var = res[0].toarray()[:, 0]
                     self.current_virtual_vel_var = res[1].toarray()[:, 0]
-                #rospy.loginfo(robot_vel_var)
                 # Some solvers fail silently. Ensure that we don't send failed
                 # commands:
                 if np.isnan(robot_vel_var).any():
