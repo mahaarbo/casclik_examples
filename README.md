@@ -15,3 +15,4 @@ This contains simple tests of CASCLIK with robots. They are generally based on e
 1. PR2 connection issues: remember to run `export ROBOT=sim` before running the pr2 example.
 2. Moe2016_example1/2 not working after running pr2 example: the `kinetic_pr2` workspace contains a `controller_manager` that seems to override the standard installation. Deleting `./devel/` and `./build` fixes this issue.
 3. If you see mentions of missing position controllers, try `sudo apt-get install ros-VERSION-position-controllers`
+4. TIFFFieldWithTag: Internal error, unknown tag 0xa20c. This comes from Rviz not understanding TIFF files in the current version. You can safely ignore these errors.

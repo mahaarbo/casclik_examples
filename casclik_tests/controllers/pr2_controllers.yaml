@@ -1,0 +1,34 @@
+# Joint position controller
+joint_position_controller:
+  type: "position_controllers/JointGroupPositionController"
+  joints:
+    - bl_caster_l_wheel_joint #1
+    - bl_caster_r_wheel_joint #2
+    - bl_caster_rotation_joint #3
+    - br_caster_l_wheel_joint #4
+    - br_caster_r_wheel_joint #5
+    - br_caster_rotation_joint #6
+    - fl_caster_l_wheel_joint #7
+    - fl_caster_r_wheel_joint #8
+    - fl_caster_rotation_joint #9
+    - fr_caster_l_wheel_joint #10
+    - fr_caster_r_wheel_joint #11
+    - fr_caster_rotation_joint #12
+    - head_pan_joint #13
+    - head_tilt_joint #14 
+    - l_elbow_flex_joint #15
+    - l_forearm_roll_joint #16
+    - l_shoulder_lift_joint #17
+    - l_shoulder_pan_joint #18
+    - l_upper_arm_roll_joint #19
+    - laser_tilt_mount_joint #20
+    - r_elbow_flex_joint #21
+    - r_forearm_roll_joint #22
+    - r_shoulder_lift_joint #23
+    - r_shoulder_pan_joint #24
+    - r_upper_arm_roll_joint #25
+state_publish_rate: 50 # Defaults to 50
+
+joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50  
