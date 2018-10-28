@@ -104,6 +104,9 @@ class DefaultRobotInterface(object):
         casclik_joint_names (list): List of joint names as used in casclik.
         cntrllr_class (): CASCLIK controller, defaults to ReactiveQPController.
         monitors (list): casclik functions of time and robotvar to stop us.
+        input_topic_names (list): Input topics to subscribe to.
+        input_topic_msg_types (list): The message types of input topics.
+        input_topic_mapping (func): Function mapping topics to input_var.
         max_robot_vel_var (list, cs.np.array): Enforced through saturation.
         min_robot_vel_var (list, cs.np.array): Enforced through saturation.
         namespace (str): namespace of the robot. Defaults to None.
@@ -116,14 +119,20 @@ class DefaultRobotInterface(object):
                  cntrllr_class=None,
                  namespace="",
                  monitors=[],
+                 input_topic_names=[],
+                 input_topic_msg_types=[],
+                 input_topic_mapping=None,
                  max_robot_vel_var=[],
                  min_robot_vel_var=[],
                  cost_expr=None,
                  virtual_var0=None,
+                 slack_var0=None,
+                 input_var0=None,
                  options=None):
         # Sanitize namespace
         ns = sanitize_namespace(namespace)
 
+        self.options = options
         # Setup controller
         if cntrllr_class is None:
             cntrllr_class = cc.ReactiveQPController
@@ -137,6 +146,8 @@ class DefaultRobotInterface(object):
         self.cntrllr.setup_solver()
         self.cntrllr.setup_problem_functions()
 
+        if self.options["solve_initial_value_problem"]:
+            self.cntrllr.setup_initial_problem_solver()
         # Initial message variables
         self.is_first = True
         self.joint_names = casclik_joint_names
@@ -145,6 +156,7 @@ class DefaultRobotInterface(object):
         commanded_ordering = rospy.get_param(
             ns+"/joint_position_controller/joints")
         self.command_remap = []
+        self.commanded_joint_names = commanded_ordering
         for jname in casclik_joint_names:
             self.command_remap.append(commanded_ordering.index(jname))
         # Sane stop and start
@@ -162,18 +174,56 @@ class DefaultRobotInterface(object):
             nvirt = skill_spec.n_virtual_var
             if virtual_var0 is None:
                 self.current_virtual_var = np.zeros(nvirt)
+                self.current_virtual_vel_var = np.zeros(nvirt)
             else:
                 self.current_virtual_var = virtual_var0
                 self.current_virtual_vel_var = np.zeros(nvirt)
-        if options is None:
-            options = {"open_loop": False}
-        self.options = options
+        if skill_spec.slack_var is None:
+            self.current_slack_var = None
+        else:
+            nslack = skill_spec.n_slack_var
+            if slack_var0 is None:
+                self.current_slack_var = np.zeros(nslack)
+            else:
+                self.current_slack_var = slack_var0
+        if skill_spec.input_var is None:
+            self.current_input_var = None
+        else:
+            if input_var0 is None:
+                ninput = skill_spec.n_input_var
+                self.current_input_var = np.zeros(ninput)
+            else:
+                self.current_input_var = input_var0
         self.monitors = monitors
         self.max_robot_vel_var = max_robot_vel_var
         self.min_robot_vel_var = min_robot_vel_var
         self.stop_reason = "initialized"
         self.lock = Lock()  # Callback may require semaphores.
-        # Setup connections and callback
+        # Setup input subscribers if required
+        has_input = self.cntrllr.skill_spec._has_input
+        if has_input and len(input_topic_names) == 0:
+            rospy.logerr("Error in DefaultRobotInterface for skill:"
+                         + self.skill_spec.label + ". It has input, but"
+                         + " no input_topic_names specified.")
+        if has_input and len(input_topic_msg_types) == 0:
+            rospy.logerr("Error in DefaultRobotInterface for skill:"
+                         + self.skill_spec.label + ". It has input, but"
+                         + " no input_topic_msg_types specified.")
+        if has_input and input_topic_mapping is None:
+            rospy.logerr("Error in DefaultRobotInterface for skill:"
+                         + self.skill_spec.label + ". It has input, but"
+                         + " no input_topic_mapping specified.")
+        self.input_topic_mapping = input_topic_mapping
+        self.input_subs = []
+        if has_input:
+            for idx, name in enumerate(input_topic_names):
+                self.input_subs += [rospy.Subscriber(
+                    name,
+                    input_topic_msg_types[idx],
+                    callback=self.callback_input,
+                    callback_args=idx,
+                    queue_size=1)]
+        # Setup feedback control publisher/subscriber
         self.sub = rospy.Subscriber(ns+"/joint_states",
                                     JointState,
                                     self.callback_control)
@@ -193,9 +243,20 @@ class DefaultRobotInterface(object):
             opt = {}
         if "open_loop" not in opt:
             opt["open_loop"] = False
+        if "solve_initial_value_problem" not in opt:
+            opt["solve_initial_value_problem"] = False
         self._options = opt
 
+    def callback_input(self, msg, index):
+        """Runs input_topic_mapping on the message. Remember to use the index.
+        """
+        with self.lock:
+            if self.running:
+                self.current_input_var = self.input_topic_mapping(msg, index)
+
     def callback_control(self, msg):
+        """Callback method for feedback control of the robot.
+        """
         with self.lock:
             if self.running:
                 if self.is_first:
@@ -203,6 +264,7 @@ class DefaultRobotInterface(object):
                     self.is_first = False
                     # We have to learn how the publisher has the joints ordered
                     published_ordering = msg.name
+                    self.published_joint_names = published_ordering
                     casclik_ordering = self.joint_names
                     publish_remap = []
                     for jname in casclik_ordering:
@@ -211,6 +273,17 @@ class DefaultRobotInterface(object):
                     # Update values with remap
                     for curr_idx, new_idx in enumerate(self.publish_remap):
                         self.current_robot_var[curr_idx] = msg.position[new_idx]
+                    # Solve initial value problem
+                    if self.options["solve_initial_value_problem"]:
+                        current_vars = [rospy.get_time(), self.current_robot_var]
+                        if self.cntrllr.skill_spec.virtual_var is not None:
+                            current_vars += [self.current_virtual_var]
+                        res = self.cntrllr.solve_initial_problem(*current_vars)
+
+                        if self.cntrllr.skill_spec.virtual_var is not None:
+                            self.current_virtual_var += self.timestep*res[0].toarray()[:, 0]
+                        if self.cntrllr.skill_spec.slack_var is not None:
+                            self.current_slack_var = res[1].toarray()[:, 0]
                     return
 
                 # Prepare for solving
