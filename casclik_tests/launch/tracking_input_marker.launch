@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This is an example where an interactive RVIZ marker is used to move the position of the end effector --> 
+<launch>
+  <!-- Arguments of the launch -->
+  <arg name="sim" default="true"/>
+
+  <!-- Upload the robot description-->
+  <include file="$(find ur_description)/launch/ur5_upload.launch">
+    <arg name="limited" value="false"/>
+  </include>
+
+  <!-- Startup controllers and things -->
+  <group if="$(arg sim)">
+    <!-- Prepare simulated world-->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="world_name" default="worlds/empty.world"/>
+      <arg name="paused" value="true"/>
+      <arg name="gui" value="false"/>
+    </include>
+    <!-- push robot_description to factory and spawn robot in gazebo -->
+    <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description
+									      -model robot -z 0.1
+									      -J shoulder_pan_joint -1.5
+									      -J shoulder_lift_joint -1.6447247447521742
+									      -J elbow_joint 1.4830607057020933
+									      -J wrist_1_joint -0.9733457906220311
+									      -J wrist_2_joint -0.6578997165707934
+									      -J wrist_3_joint 0.0 -unpause" respawn="false" output="screen" />
+    <!-- startup joint state and robot state publishers -->
+    <include file="$(find ur_gazebo)/launch/controller_utils.launch" />
+
+    <!-- Startup position controllers -->
+    <rosparam file="$(find casclik_tests)/controllers/ur5_controllers.yaml" command="load" />
+    <node name="arm_controller_spawner" pkg="controller_manager" type="controller_manager" args="spawn joint_position_controller" respawn="false" output="screen"/>
+  </group>
+
+  <group unless="$(arg sim)">
+    <!-- Include your desired HW launch here -->    
+  </group>
+
+
+  <!-- Load RVIZ -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find casclik_tests)/rviz/ur5_input.rviz" />
+  <!-- Setup our input marker -->
+  <node name="input_marker" pkg="casclik_tests" type="input_marker.py" output="screen" args="-n input_marker"/>
+  <!-- spawn our visualizer services -->
+  <node name="vizhandler" pkg="py_viz_marker" type="vizhandler.py" output="screen" args="-rate 1"/>
+  
+  <!-- Spawn our control node -->
+  <node name="tracking_input_marker" pkg="casclik_tests" type="tracking_input_marker.py" output="screen"/>
+</launch>
