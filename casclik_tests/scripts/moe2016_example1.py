@@ -182,7 +182,7 @@ if __name__ == "__main__":
     # Setup robot interfaces
     ####################################################################
     # Things for both:
-    cntrllr_class = cc.PseudoInverseController  #cc.ReactiveQPController# 
+    cntrllr_class = cc.ReactiveQPController  # cc.PseudoInverseController
     timestep = 1.0/50.0  # Default controller Hz
     casclik_joint_names = fk_dict["joint_names"]
 
