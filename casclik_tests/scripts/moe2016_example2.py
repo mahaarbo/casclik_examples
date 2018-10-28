@@ -71,8 +71,8 @@ if __name__ == "__main__":
     x_min, x_max = 0.1, 0.5
     y_min, y_max = -0.5, 0.4
     z_min, z_max = 0.3, 0.85
-    
-    # Desired path
+
+    # Desired trajectory
     path_des = cs.vertcat(0.5*cs.sin(0.1*t)*cs.sin(0.1*t) + 0.2,
                           0.5*cs.cos(0.1*t)+0.25*cs.sin(0.1*t),
                           0.5*cs.sin(0.1*t)*cs.cos(0.1*t) + 0.7)
@@ -100,8 +100,8 @@ if __name__ == "__main__":
     colav_z_cnstr = cc.SetConstraint(
         label="colav_z",
         expression=p_fk(t, q)[2],
-        set_min=x_min,
-        set_max=x_max,
+        set_min=z_min,
+        set_max=z_max,
         priority=2,
         constraint_type="hard"
     )
@@ -128,11 +128,10 @@ if __name__ == "__main__":
     )
     skill.print_constraints()
 
-
     ####################################################################
     # Setup stop monitors
     ####################################################################
-    # The controllers stop if we've run for 80 seconds
+    # The controller stop if we've run for 80 seconds
     timer80s = cs.Function(
         "timer80s",
         [t, q], [t > 80.0]
@@ -184,13 +183,31 @@ if __name__ == "__main__":
                       (y_max + y_min)/2,
                       (z_max + z_min)/2),
                 Quaternion(0, 0, 0, 1)),
-            header=Header(frame_id="base_link"),
+            header=Header(frame_id="world"),
             color=ColorRGBA(0.0, 0.75, 0.05, 0.5),
             lifetime=rospy.Duration(1.)
         )
         # Add them to the vizhandler
         add_marker(label="box",
                    marker=box_mrkr)
+        line_mrkr = Marker(
+            type=Marker.LINE_STRIP,
+            id=1,
+            scale=Vector3(0.01, 1., 1.),
+            action=Marker.ADD)
+        line_mrkr.color.r = 1.0
+        line_mrkr.color.a = 1.0
+        line_mrkr.header.frame_id = "world"
+        fpath_des = cs.Function("fpath_des", [t], [path_des])
+        points = []
+        npoints = 40
+        for i in range(npoints):
+            des_p = fpath_des(2*cs.pi*10*i/(npoints-1)).toarray()[:,0]
+            points += [Point(des_p[0], des_p[1], des_p[2])]
+        line_mrkr.points = points
+        add_marker(label="desired_path",
+                   marker=line_mrkr)
+
     ####################################################################
     # Start moving to the points
     ####################################################################
