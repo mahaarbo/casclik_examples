@@ -69,11 +69,10 @@ def switch_hw_controller(desired_controller, resources, ns="", timeout=None):
     return sw([str(desired_controller)], stop_cntrllrs,
               SwitchControllerRequest.STRICT)
 
+
 ####################################
 # Default Robot callback interface
 ####################################
-
-
 class DefaultRobotInterface(object):
     """A default robot interface that runs as a callback routine.  The
 
