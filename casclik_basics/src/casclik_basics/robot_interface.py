@@ -294,27 +294,22 @@ class DefaultRobotInterface(object):
                 # Figure out time and timestep estimate (assuming next timestep
                 # is equal current)
                 current_time = rospy.get_time() - self.initial_time
-                actual_dt = current_time - self.previous_time
-
-                if self.current_virtual_var is None:
-                    res = self.cntrllr.solve(time_var=current_time,
-                                             robot_var=self.current_robot_var)
-                    robot_vel_var = res[0].toarray()[:, 0]
-                else:
-                    dv = self.current_virtual_vel_var
-                    self.current_virtual_var += actual_dt*dv
-                    res = self.cntrllr.solve(time_var=current_time,
-                                             robot_var=self.current_robot_var,
-                                             virtual_var=self.current_virtual_var)
-                    robot_vel_var = res[0].toarray()[:, 0]
-                    self.current_virtual_vel_var = res[1].toarray()[:, 0]
-                # Some solvers fail silently. Ensure that we don't send failed
-                # commands:
+                # actual_dt = current_time - self.previous_time
+                # rospy.loginfo(actual_dt)
+                current_vars = {"time_var": current_time,
+                                "robot_var": self.current_robot_var,
+                                "virtual_var": self.current_virtual_var,
+                                "input_var": self.current_input_var,
+                                "warmstart_slack_var": self.current_slack_var}
+                res = self.cntrllr.solve(**current_vars)
+                robot_vel_var = res[0].toarray()[:, 0]
+                # Check for silent failures:
                 if np.isnan(robot_vel_var).any():
                     self.running = False
                     self.is_first = True
                     self.stop_reason = "solver_failure_nan"
                     return
+
                 # Saturate the robot velocities if necesasry:
                 for rob_idx, max_rate in enumerate(self.max_robot_vel_var):
                     robot_vel_var[rob_idx] = min(robot_vel_var[rob_idx],
@@ -324,14 +319,21 @@ class DefaultRobotInterface(object):
                                                  min_rate)
                 # Iterate
                 self.current_robot_var += robot_vel_var*self.timestep
+
                 # Initialize command
                 command = Float64MultiArray()
-                command.data = np.zeros(len(self.joint_names))
+                command.data = np.array(msg.position)  # Improve this!
                 # Remap urdf ordering to commanded ordering before publishing
                 for curr_idx, new_idx in enumerate(self.command_remap):
                     command.data[new_idx] = self.current_robot_var[curr_idx]
                 self.pub.publish(command)
                 self.previous_time = current_time
+                if self.current_virtual_var is not None:
+                    self.current_virtual_vel_var = res[1].toarray()[:, 0]
+                    self.current_virtual_var += self.timestep*self.current_virtual_vel_var
+                if self.current_slack_var is not None:
+                    if res[2] is not None:
+                        self.current_slack_var = res[2].toarray()[:, 0]
                 # Check if we're violating any monitors and stop.
                 for monit_func in self.monitors:
                     if self.current_virtual_var is not None:
@@ -367,3 +369,5 @@ class DefaultRobotInterface(object):
         with self.lock:
             self.sub.unregister()
             self.pub.unregister()
+            for sub in self.input_subs:
+                sub.unregister()
