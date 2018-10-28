@@ -42,7 +42,7 @@
 
 
   <!-- spawn our visualizer services -->
-  <node name="vizhandler" pkg="py_viz_marker" type="vizhandler.py" output="screen" args="-rate 50"/>
+  <node name="vizhandler" pkg="py_viz_marker" type="vizhandler.py" output="screen" args="-rate 1"/>
 
   <!-- Spawn our control node -->
   <node name="moe2016_example2" pkg="casclik_tests" type="moe2016_example2.py" output="screen"/>
