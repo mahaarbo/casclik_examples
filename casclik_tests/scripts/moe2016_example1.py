@@ -140,10 +140,8 @@ if __name__ == "__main__":
     # List constraints for the two skills
     constraints_point1 = [move_point1_cnstr,
                           colav_A_cnstr,
-                          colav_B_cnstr,
                           fov_cnstr]
     constraints_point2 = [move_point2_cnstr,
-                          colav_A_cnstr,
                           colav_B_cnstr,
                           fov_cnstr]
     # Setup the first skill and print info
@@ -195,7 +193,8 @@ if __name__ == "__main__":
         monitors=[stop_point1],
         max_robot_vel_var=[1.5]*len(fk_dict["joint_names"]),
         min_robot_vel_var=[-1.5]*len(fk_dict["joint_names"]),
-        #options={"converge_final_set_to_max": True}
+        options={"converge_final_set_to_max": True, "pinv_method": "damped",
+                 "damping_factor":1e-16}
     )
 
     # Setup second
@@ -205,9 +204,10 @@ if __name__ == "__main__":
         cntrllr_class=cntrllr_class,
         casclik_joint_names=casclik_joint_names,
         monitors=[stop_point2],
-        max_robot_vel_var=[0.1]*len(fk_dict["joint_names"]),
-        min_robot_vel_var=[-0.1]*len(fk_dict["joint_names"]),
-        #options={"converge_final_set_to_max": True}
+        max_robot_vel_var=[1.5]*len(fk_dict["joint_names"]),
+        min_robot_vel_var=[-1.5]*len(fk_dict["joint_names"]),
+        options={"converge_final_set_to_max": True, "pinv_method": "damped",
+                 "damping_factor": 1e-7}
     )
 
     ####################################################################
@@ -272,7 +272,7 @@ if __name__ == "__main__":
             rospy.sleep(0.1)  # Check every 100 ms
     except rospy.ROSInterruptException:
         quit()
-    rospy.loginfo("Stopped robot_interface_skill1")
+    rospy.loginfo("Stopped robot_interface_skill1:"+str(robot_interface_skill1.stop_reason))
     robot_interface_skill1.disconnect()
     robot_interface_skill2.start()
     try:
@@ -280,4 +280,4 @@ if __name__ == "__main__":
             rospy.sleep(0.1)  # Check every 100 ms
     except rospy.ROSInterruptException:
         quit()
-    rospy.loginfo("Stopped robot_interface_skill2")
+    rospy.loginfo("Stopped robot_interface_skill2:" +str(robot_interface_skill2.stop_reason))
