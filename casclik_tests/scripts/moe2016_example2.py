@@ -95,7 +95,6 @@ if __name__ == "__main__":
         set_max=y_max,
         priority=1,
         constraint_type="hard"
-        
     )
     colav_z_cnstr = cc.SetConstraint(
         label="colav_z",
@@ -202,7 +201,7 @@ if __name__ == "__main__":
         points = []
         npoints = 40
         for i in range(npoints):
-            des_p = fpath_des(2*cs.pi*10*i/(npoints-1)).toarray()[:,0]
+            des_p = fpath_des(2*cs.pi*10*i/(npoints-1)).toarray()[:, 0]
             points += [Point(des_p[0], des_p[1], des_p[2])]
         line_mrkr.points = points
         add_marker(label="desired_path",
