@@ -34,16 +34,18 @@ def sanitize_namespace(ns):
     return ns
 
 
-def switch_hw_controller(desired_controller, resources, ns="", timeout=None):
+def switch_hw_controller(desired_controller, resources, namespace="", timeout=None):
     """Function to switch hw controller when there can be resource conflict."""
-    rospy.wait_for_service(ns + "/controller_manager/list_controllers",
+    ns = sanitize_namespace(namespace)
+    rospy.loginfo("wait for /"+ns+"/controller_manager/list_controllers")
+    rospy.wait_for_service("/" + ns + "/controller_manager/list_controllers",
                            timeout=None)
     rospy.loginfo("wait for switch"+ns+"/controller_manager/switch_controller")
-    rospy.wait_for_service(ns + "/controller_manager/switch_controller",
+    rospy.wait_for_service("/" + ns + "/controller_manager/switch_controller",
                            timeout=None)
-    ls = rospy.ServiceProxy(ns + "/controller_manager/list_controllers",
+    ls = rospy.ServiceProxy("/" + ns + "/controller_manager/list_controllers",
                             ListControllers)
-    sw = rospy.ServiceProxy(ns + "/controller_manager/switch_controller",
+    sw = rospy.ServiceProxy("/" + ns + "/controller_manager/switch_controller",
                             SwitchController)
 
     # Find controllers that control same resources
