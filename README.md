@@ -8,8 +8,7 @@ This contains a default robot interface which is a python class that just tries 
 This contains simple tests of CASCLIK with robots. They are generally based on examples from constraint-based robotics articles, and some simple home-made examples. Many of these examples require [`py_viz_marker`](https://github.com/mahaarbo/py_viz_marker) which is a simple rviz marker adder.
 
 1. `moe2016_example1/2` requires the UR packages (in particular: `ur_description` and `ur_gazebo`), `gazebo`, and `py_viz_marker`.
-2. `aertbelien2014_example` requires the PR2 packages. If you want to explore the PR2 with kinetic kame try [kinetic_pr2](https://github.com/RichardKelley/kinetic_pr2). We're running out own butchered version of the URDF from that git repository, so we only need the meshes from `pr2_description` to be available. It might work to simply download the `pr2_description` from apt.
-3. 
+2. `aertbelien2014_example` requires the PR2 packages. If you want to explore the PR2 with kinetic kame try [kinetic_pr2](https://github.com/RichardKelley/kinetic_pr2). We're running our own butchered version of the URDF from that git repository, so we only need the meshes from `pr2_description` to be available. It might work to simply download the `pr2_description` from apt.
 
 
 ### Troubleshooting:
