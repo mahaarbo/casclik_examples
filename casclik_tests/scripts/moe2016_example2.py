@@ -140,7 +140,7 @@ if __name__ == "__main__":
     # Setup robot interfaces
     ####################################################################
     # Things for both:
-    cntrllr_class = cc.ReactiveQPController  #cc.PseudoInverseController  #  
+    cntrllr_class = cc.ReactiveQPController  # cc.PseudoInverseController
     timestep = 1.0/50.0  # Default controller Hz
     casclik_joint_names = fk_dict["joint_names"]
 
@@ -153,7 +153,6 @@ if __name__ == "__main__":
         monitors=[timer80s],
         max_robot_vel_var=[1.5]*len(fk_dict["joint_names"]),
         min_robot_vel_var=[-1.5]*len(fk_dict["joint_names"]),
-        #options={"converge_final_set_to_max": True}
     )
 
     ####################################################################
