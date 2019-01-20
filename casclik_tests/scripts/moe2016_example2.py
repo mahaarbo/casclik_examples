@@ -73,7 +73,7 @@ if __name__ == "__main__":
     z_min, z_max = 0.3, 0.85
 
     # Desired trajectory
-    path_des = cs.vertcat(0.5*cs.sin(0.1*t)*cs.sin(0.1*t) + 0.2,
+    traj_des = cs.vertcat(0.5*cs.sin(0.1*t)*cs.sin(0.1*t) + 0.2,
                           0.5*cs.cos(0.1*t)+0.25*cs.sin(0.1*t),
                           0.5*cs.sin(0.1*t)*cs.cos(0.1*t) + 0.7)
     ####################################################################
@@ -105,9 +105,9 @@ if __name__ == "__main__":
         constraint_type="hard"
     )
     # Tracking trajectory
-    path_cnstr = cc.EqualityConstraint(
+    traj_cnstr = cc.EqualityConstraint(
         label="move_point2",
-        expression=p_fk(t, q) - path_des,
+        expression=p_fk(t, q) - traj_des,
         priority=3,
         constraint_type="soft",
         gain=0.15
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     constraints = [colav_x_cnstr,
                    colav_y_cnstr,
                    colav_z_cnstr,
-                   path_cnstr]
+                   traj_cnstr]
     # Setup the skill and print info
     skill = cc.SkillSpecification(
         label="box_move",
@@ -196,14 +196,14 @@ if __name__ == "__main__":
         line_mrkr.color.r = 1.0
         line_mrkr.color.a = 1.0
         line_mrkr.header.frame_id = "world"
-        fpath_des = cs.Function("fpath_des", [t], [path_des])
+        ftraj_des = cs.Function("ftraj_des", [t], [traj_des])
         points = []
         npoints = 40
         for i in range(npoints):
-            des_p = fpath_des(2*cs.pi*10*i/(npoints-1)).toarray()[:, 0]
+            des_p = ftraj_des(2*cs.pi*10*i/(npoints-1)).toarray()[:, 0]
             points += [Point(des_p[0], des_p[1], des_p[2])]
         line_mrkr.points = points
-        add_marker(label="desired_path",
+        add_marker(label="desired_traj",
                    marker=line_mrkr)
 
     ####################################################################
