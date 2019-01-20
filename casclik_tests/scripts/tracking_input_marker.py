@@ -60,7 +60,7 @@ if __name__ == "__main__":
     resp = robintrfc.switch_hw_controller(  # sane switching of controllers
         "joint_position_controller",
         resources=fk_dict["joint_names"],
-        ns="")
+        namespace="")
 
     if resp.ok == 1:
         rospy.loginfo("Controller switched!")
