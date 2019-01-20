@@ -38,7 +38,7 @@ if __name__ == "__main__":
     T_r_fk = fk_dict_r["T_fk"]
     p_r_fk = cs.Function("p_r_fk", [t, q_r], [T_r_fk(q_r)[:3, 3]])
     R_r_fk = cs.Function("R_r_fk", [t, q_r], [T_r_fk(q_r)[:3, :3]])
-    
+
     # Left arm
     rospy.loginfo("--Reading left arm")
     fk_dict_l = xmlconv.from_parameter_server(
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     # WARNING: The model predictive contorller uses around 0.03 seconds to
     # solve this problem with default settings, while the update rate of the
     # joint state publisher and joint position controller are 50 hz. This means
-    # that we cannot run this problem with the MPC as is. 
+    # that we cannot run this problem with the MPC as is.
     cntrllr_class = cc.ReactiveQPController
     timestep = 1.0/50.0  # Default controller Hz
     casclik_joint_names = joint_names
