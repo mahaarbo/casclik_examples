@@ -106,7 +106,7 @@ if __name__ == "__main__":
     )
     # Tracking trajectory
     traj_cnstr = cc.EqualityConstraint(
-        label="move_point2",
+        label="trajectory",
         expression=p_fk(t, q) - traj_des,
         priority=3,
         constraint_type="soft",
