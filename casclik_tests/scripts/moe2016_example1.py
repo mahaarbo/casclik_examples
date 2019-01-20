@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     # Field of view
     a_des = cs.vertcat(1., 0., 0.)
-    a_dist = R_fk(t, q)[:3, 2] - a_des
+    a_act = R_fk(t, q)[:3, 2]
     fov_max = 0.2622
 
     ####################################################################
@@ -130,10 +130,10 @@ if __name__ == "__main__":
     # Trying to maintain field of view
     fov_cnstr = cc.SetConstraint(
         label="fov",
-        expression=cs.dot(a_dist, a_dist),
+        expression=cs.dot(a_act-a_des, a_act-a_des),
         set_max=fov_max**2,
         set_min=0.0,
-        gain=1.0,
+        gain=10.0,
         constraint_type="soft",
         priority=3
     )
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     # Setup robot interfaces
     ####################################################################
     # Things for both:
-    cntrllr_class = cc.ReactiveQPController  # cc.PseudoInverseController
+    cntrllr_class = cc.ReactiveQPController
     timestep = 1.0/50.0  # Default controller Hz
     casclik_joint_names = fk_dict["joint_names"]
 
@@ -192,10 +192,8 @@ if __name__ == "__main__":
         casclik_joint_names=casclik_joint_names,
         monitors=[stop_point1],
         max_robot_vel_var=[1.5]*len(fk_dict["joint_names"]),
-        min_robot_vel_var=[-1.5]*len(fk_dict["joint_names"]),
-        options={"converge_final_set_to_max": True, "pinv_method": "damped",
-                 "damping_factor":1e-16}
-    )
+        min_robot_vel_var=[-1.5]*len(fk_dict["joint_names"])
+        )
 
     # Setup second
     robot_interface_skill2 = robintrfc.DefaultRobotInterface(
@@ -206,8 +204,6 @@ if __name__ == "__main__":
         monitors=[stop_point2],
         max_robot_vel_var=[1.5]*len(fk_dict["joint_names"]),
         min_robot_vel_var=[-1.5]*len(fk_dict["joint_names"]),
-        options={"converge_final_set_to_max": True, "pinv_method": "damped",
-                 "damping_factor": 1e-7}
     )
 
     ####################################################################
@@ -280,4 +276,4 @@ if __name__ == "__main__":
             rospy.sleep(0.1)  # Check every 100 ms
     except rospy.ROSInterruptException:
         quit()
-    rospy.loginfo("Stopped robot_interface_skill2:" +str(robot_interface_skill2.stop_reason))
+    rospy.loginfo("Stopped robot_interface_skill2:"+str(robot_interface_skill2.stop_reason))
