@@ -1,5 +1,5 @@
 # CASCLIK EXAMPLES
-This is a metapackage containing some example usage of CASCLIK.
+This is a metapackage containing some example usage of [CASCLIK](https://github.com/mahaarbo/casclik) which is a CasADi-based closed-loop inverse kinematics module.
 
 ## casclik_basics
 This contains a default robot interface which is a python class that just tries to keep track of current `robot_var`, current `virtual_var`, and sends commands to a robot using `joint_position_controller` and callback on `joint_states`.
